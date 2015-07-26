@@ -38,13 +38,13 @@ def add_note(label, title, text, todo_list=False):
     # Open add note form
     fx.find_element_by_xpath('//div[contains(text(), "Add note")]').click()
 
-    # Fill the note contents
-    fx.find_element_by_xpath('//div[contains(text(), "Add note")]').click()
-    fx.find_element_by_css_selector('*:focus').send_keys(text.decode('utf-8'))
-
     # Fill the note title
     fx.find_element_by_xpath('//div[contains(text(), "Title")]').click()
     fx.find_element_by_css_selector('*:focus').send_keys(title.decode('utf-8'))
+
+    # Fill the note contents
+    fx.find_element_by_xpath('//div[contains(text(), "Add note")]').click()
+    fx.find_element_by_css_selector('*:focus').send_keys(text.decode('utf-8'))
 
     if todo_list:
         # Convert to list
