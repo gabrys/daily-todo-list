@@ -23,35 +23,36 @@ def log_in():
     fx.find_element_by_css_selector('form').submit()
 
 
-def get_note_text(label, title):
+def get_note(label, title):
     fx.get('https://keep.google.com/#label/' + config['label'])
+    fx.implicitly_wait(10)
     xpath = '//div[contains(text(), "' + title + '")]/following-sibling::div'
     notes = fx.find_elements_by_xpath(xpath)
     if len(notes):
-        return notes[0].text.encode('utf-8')
+        return notes[0]
     return None
 
 
-def add_note(label, title, text, todo_list=False):
-    fx.get('https://keep.google.com/#label/' + config['label'])
+def copy_note(label, template_title, new_title):
+    # Get the note
+    get_note(label, template_title).click()
 
-    # Open add note form
-    fx.find_element_by_xpath('//div[contains(text(), "Add note")]').click()
+    # Copy the note
+    more_btns = fx.find_elements_by_css_selector('div[role="toolbar"] div[aria-label="More"]')
+    more_btns[-1].click()
+    copy_btn = fx.find_element_by_xpath('//div[contains(text(), "Make a copy")]')
+    copy_btn.click()
 
-    # Fill the note title
-    fx.find_element_by_xpath('//div[contains(text(), "Title")]').click()
-    fx.find_element_by_css_selector('*:focus').send_keys(title.decode('utf-8'))
+    # Update the title
+    xpath = '//div[contains(text(), "' + template_title + '")]'
+    title = fx.find_elements_by_xpath(xpath)[-1]
+    title.click()
+    title.clear()
+    title.send_keys(new_title.decode('utf-8'))
 
-    # Fill the note contents
-    fx.find_element_by_xpath('//div[contains(text(), "Add note")]').click()
-    fx.find_element_by_css_selector('*:focus').send_keys(text.decode('utf-8'))
-
-    if todo_list:
-        # Convert to list
-        fx.find_element_by_css_selector('*[role="toolbar"] *[aria-label="New list"][aria-disabled="false"]').click()
-
-    # Save
-    fx.find_element_by_xpath('//div[@role="button"][contains(text(), "Done")]').click()
+    # Save/close
+    xpath = '//div[contains(text(), "Done")]'
+    fx.find_elements_by_xpath(xpath)[-1].click()
 
 
 if __name__ == '__main__':
@@ -59,9 +60,8 @@ if __name__ == '__main__':
     log_in()
     locale.setlocale(locale.LC_ALL, config['lang'])
     today_title = datetime.now().strftime(config['today_title_format'])
-    if get_note_text(config['label'], today_title) is None:
-        template = get_note_text(config['label'], config['template_title'])
-        add_note(config['label'], today_title, template, todo_list=True)
+    if get_note(config['label'], today_title) is None:
+        copy_note(config['label'], config['template_title'], today_title)
         wait_for_sync()
         print 'Note ' + today_title + ' added'
     else:
